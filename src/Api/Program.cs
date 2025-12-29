@@ -1,14 +1,18 @@
 using Api.Extensions;
+using Api.Extensions.Api.Extensions;
 using Api.Middleware;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
- 
+
 builder.Services
        .AddInfrastructure(builder.Configuration.GetConnectionString("Default"))
        .AddApplicationServices()
-       .AddSwaggerDocumentation();
-  
+       .AddSwaggerDocumentation()
+       .AddHealthChecksConfiguration();
+
+
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
  
