@@ -31,5 +31,10 @@ public class ProdutoRepository : IProdutoRepository
             .AsNoTracking()
             .ToListAsync();
     }
+    public async Task AtualizarAsync(Domain.Entities.Produto produto)
+    {
+        _context.Produtos.Update(produto);
+        await _context.SaveChangesAsync();
+    }
 
 }

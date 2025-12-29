@@ -1,4 +1,4 @@
-namespace Application.Produtos.CriarProduto;
+namespace Application.Commands.Produtos.CriarProduto;
 
 public record CriarProdutoCommand(
     string Nome,

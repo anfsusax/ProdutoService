@@ -1,5 +1,11 @@
+using Api.Middleware;
+using Application.Commands.Produtos.Atualizar;
+using Application.Commands.Produtos.AtualizarDados;
+using Application.Commands.Produtos.CriarProduto;
 using Application.Interfaces;
-using Application.Produtos.CriarProduto;
+using Application.Queries.Produtos.ObterPorId;
+using Application.Queries.Produtos.ObterTodos;
+using Infrastructure.EventBus;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -11,7 +17,17 @@ builder.Services.AddDbContext<ProdutoDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+
+builder.Services.AddScoped<IEventPublisher, EventPublisher>();
+
 builder.Services.AddScoped<CriarProdutoHandler>();
+
+builder.Services.AddScoped<ObterTodosProdutosQueryHandler>();
+builder.Services.AddScoped<ObterProdutoPorIdQueryHandler>();
+
+builder.Services.AddScoped<AtualizarProdutoHandler>();
+builder.Services.AddScoped<AtualizarPrecoHandler>();
+builder.Services.AddScoped<AtualizarDadosProdutoHandler>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -30,6 +46,9 @@ builder.Services.AddOpenApi();
 
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
