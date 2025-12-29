@@ -7,7 +7,9 @@ namespace Api.Middleware
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
 
-        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+        public ExceptionMiddleware(
+            RequestDelegate next,
+            ILogger<ExceptionMiddleware> logger)
         {
             _next = next;
             _logger = logger;
@@ -21,26 +23,38 @@ namespace Api.Middleware
             }
             catch (DomainException ex)
             {
-                _logger.LogWarning(ex, "Erro de domínio: {Message}", ex.Message);
-                await WriteErrorResponse(context, 400, ex.Message);
+                _logger.LogWarning(
+                    ex,
+                    "Erro de domínio em {Method} {Path}",
+                    context.Request.Method,
+                    context.Request.Path);
+
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsJsonAsync(new { erro = ex.Message });
             }
             catch (KeyNotFoundException ex)
             {
-                _logger.LogWarning(ex, "Registro não encontrado: {Message}", ex.Message);
-                await WriteErrorResponse(context, 404, ex.Message);
+                _logger.LogWarning(
+                    ex,
+                    "Recurso não encontrado em {Method} {Path}",
+                    context.Request.Method,
+                    context.Request.Path);
+
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                await context.Response.WriteAsJsonAsync(new { erro = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro inesperado: {Message}", ex.Message);
-                await WriteErrorResponse(context, 500, "Ocorreu um erro interno.");
-            }
-        }
+                _logger.LogError(
+                    ex,
+                    "Erro inesperado em {Method} {Path}",
+                    context.Request.Method,
+                    context.Request.Path);
 
-        private static Task WriteErrorResponse(HttpContext context, int statusCode, string message)
-        {
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = statusCode;
-            return context.Response.WriteAsJsonAsync(new { erro = message });
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsJsonAsync(
+                    new { erro = "Ocorreu um erro interno." });
+            }
         }
     }
 }

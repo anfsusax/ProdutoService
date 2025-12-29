@@ -2,8 +2,17 @@ using Api.Extensions;
 using Api.Extensions.Api.Extensions;
 using Api.Middleware;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateLogger();
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 builder.Services
        .AddInfrastructure(builder.Configuration.GetConnectionString("Default"))
@@ -32,7 +41,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-
+app.UseSerilogRequestLogging();
 
 
 app.Run();

@@ -2,6 +2,6 @@
 {
     public interface IEventPublisher
     {
-        Task PublishAsync<TEvent>(TEvent @event);
+        Task PublishAsync(Object @event);
     }
 }
