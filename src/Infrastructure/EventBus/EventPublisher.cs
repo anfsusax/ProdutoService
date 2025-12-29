@@ -1,13 +1,21 @@
 ﻿using Application.Interfaces;
+using Infrastructure.Resilience;
 using Microsoft.Extensions.Logging;
+using Polly;
 
 public class EventPublisher : IEventPublisher
 {
     private readonly ILogger<EventPublisher> _logger;
+    private readonly AsyncPolicy _policy;
 
     public EventPublisher(ILogger<EventPublisher> logger)
     {
         _logger = logger;
+
+        var retry = EventBusPolicies.CreateRetryPolicy(_logger);
+        var circuit = EventBusPolicies.CreateCircuitBreakerPolicy(_logger);
+
+        _policy = Policy.WrapAsync(retry, circuit);
     }
 
     public async Task PublishAsync(Object @event)

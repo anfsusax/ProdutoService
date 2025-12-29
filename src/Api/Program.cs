@@ -1,5 +1,5 @@
+
 using Api.Extensions;
-using Api.Extensions.Api.Extensions;
 using Api.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -9,28 +9,30 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog();
 
+var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException("Connection string 'Default' not found.");
+
 builder.Services
-       .AddInfrastructure(builder.Configuration.GetConnectionString("Default"))
+       .AddInfrastructure(connectionString)
        .AddApplicationServices()
        .AddSwaggerDocumentation()
        .AddHealthChecksConfiguration();
-
-
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
  
 var app = builder.Build();
 
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+
 app.UseMiddleware<ExceptionMiddleware>();
-
-
-
+ 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -38,12 +40,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
+app.MapHealthChecks("/health");
 app.UseSerilogRequestLogging();
-
-
+ 
 app.Run();
 
 

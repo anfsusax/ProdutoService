@@ -1,9 +1,5 @@
 ﻿using global::Api.HealthChecks;
-
-
-namespace Api.Extensions
-{
-   
+  
     namespace Api.Extensions
     {
         public static class HealthCheckExtensions
@@ -20,6 +16,4 @@ namespace Api.Extensions
             }
         }
     }
-
-}
-
+ 
