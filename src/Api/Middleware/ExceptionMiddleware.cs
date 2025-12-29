@@ -1,7 +1,7 @@
 ﻿using Domain.Exceptions;
 
 namespace Api.Middleware
-{ 
+{
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
@@ -21,23 +21,26 @@ namespace Api.Middleware
             }
             catch (DomainException ex)
             {
-                _logger.LogWarning(ex, "Erro de domínio");
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsJsonAsync(new { erro = ex.Message });
+                _logger.LogWarning(ex, "Erro de domínio: {Message}", ex.Message);
+                await WriteErrorResponse(context, 400, ex.Message);
             }
             catch (KeyNotFoundException ex)
             {
-                _logger.LogWarning(ex, "Registro não encontrado");
-                context.Response.StatusCode = 404;
-                await context.Response.WriteAsJsonAsync(new { erro = ex.Message });
+                _logger.LogWarning(ex, "Registro não encontrado: {Message}", ex.Message);
+                await WriteErrorResponse(context, 404, ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro inesperado");
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsJsonAsync(new { erro = "Ocorreu um erro interno." });
+                _logger.LogError(ex, "Erro inesperado: {Message}", ex.Message);
+                await WriteErrorResponse(context, 500, "Ocorreu um erro interno.");
             }
         }
-    }
 
+        private static Task WriteErrorResponse(HttpContext context, int statusCode, string message)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = statusCode;
+            return context.Response.WriteAsJsonAsync(new { erro = message });
+        }
+    }
 }
