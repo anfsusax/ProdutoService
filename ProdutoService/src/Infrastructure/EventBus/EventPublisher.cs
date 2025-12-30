@@ -3,6 +3,8 @@ using Infrastructure.Resilience;
 using Microsoft.Extensions.Logging;
 using Polly;
 
+namespace Infrastructure.EventBus;
+
 public class EventPublisher : IEventPublisher
 {
     private readonly ILogger<EventPublisher> _logger;

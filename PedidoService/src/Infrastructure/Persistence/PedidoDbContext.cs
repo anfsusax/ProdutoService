@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PedidoEntity = global::Pedido.Domain.Entities.PedidoModel;
+using Pedido.Domain.Entities;
 
 namespace Pedido.Infrastructure.Persistence;
 
@@ -11,6 +12,7 @@ public class PedidoDbContext : DbContext
     }
 
     public DbSet<PedidoEntity> Pedidos => Set<PedidoEntity>();
+    public DbSet<PedidoItem> PedidoItens => Set<PedidoItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -8,7 +8,7 @@ public class PedidoModel
     public decimal ValorTotal { get; private set; }
     public DateTime DataPedido { get; private set; }
     public string Status { get; private set; }
-    // public List<PedidoItem> Itens { get; private set; } = new(); // Implementing simple version first
+    public List<PedidoItem> Itens { get; private set; } = new();
 
     protected PedidoModel() { }
 

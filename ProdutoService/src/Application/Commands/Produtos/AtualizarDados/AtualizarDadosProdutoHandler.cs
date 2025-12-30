@@ -1,5 +1,6 @@
 ﻿using Application.Common.Exceptions;
 using Application.Interfaces;
+using Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Commands.Produtos.AtualizarDados
@@ -8,6 +9,7 @@ namespace Application.Commands.Produtos.AtualizarDados
     {
         private readonly IProdutoRepository _repository;
         private ILogger<AtualizarDadosProdutoHandler> _logger;
+        
         public AtualizarDadosProdutoHandler(IProdutoRepository repository, ILogger<AtualizarDadosProdutoHandler> logger)
         {
             _repository = repository;
@@ -23,6 +25,11 @@ namespace Application.Commands.Produtos.AtualizarDados
             if (produto is null)
                 throw new NotFoundException("Produto não encontrado.");
 
+            foreach (var evento in produto.DomainEvents)
+            {
+                _logger.LogInformation("Evento de domínio gerado: {Evento}", evento.GetType().Name);
+            }
+
             produto.AtualizarDados(command.Nome, command.Descricao);
 
             await _repository.AtualizarAsync(produto);
@@ -31,3 +38,4 @@ namespace Application.Commands.Produtos.AtualizarDados
     }
 
 }
+

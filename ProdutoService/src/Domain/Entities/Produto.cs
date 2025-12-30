@@ -15,7 +15,7 @@ public class Produto
     public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
 
 
-    protected Produto() { } // EF Core
+    public Produto() { } // EF Core
 
     public Produto(string nome, string descricao, decimal preco)
     {

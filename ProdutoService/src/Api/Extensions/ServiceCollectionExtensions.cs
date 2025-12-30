@@ -4,6 +4,7 @@ using Application.Commands.Produtos.CriarProduto;
 using Application.Interfaces;
 using Application.Queries.Produtos.ObterPorId;
 using Application.Queries.Produtos.ObterTodos;
+using Infrastructure.EventBus;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Produto.Infrastructure.Repositories;
