@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # PostgreSQL para PedidoService
+  pedido-postgres:
+    image: postgres:16
+    container_name: pedido-postgres
+    environment:
+      POSTGRES_DB: pedido_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pedido_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-network
+
+  # PostgreSQL para ProdutoService
+  produto-postgres:
+    image: postgres:16
+    container_name: produto-postgres
+    environment:
+      POSTGRES_DB: produto_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - produto_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-network
+
+  # ProdutoService API
+  produto-service:
+    build:
+      context: ./ProdutoService
+      dockerfile: Dockerfile
+    container_name: produto-service
+    ports:
+      - "5140:80"
+      - "7007:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__Default=Host=produto-postgres;Port=5432;Database=produto_db;Username=postgres;Password=postgres
+    depends_on:
+      produto-postgres:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  # PedidoService API
+  pedido-service:
+    build:
+      context: ./PedidoService
+      dockerfile: Dockerfile
+    container_name: pedido-service
+    ports:
+      - "5154:80"
+      - "7008:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__Default=Host=pedido-postgres;Port=5432;Database=pedido_db;Username=postgres;Password=postgres
+      - Services__ProdutoService=http://produto-service:80
+    depends_on:
+      pedido-postgres:
+        condition: service_healthy
+      produto-service:
+        condition: service_started
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+volumes:
+  pedido_postgres_data:
+  produto_postgres_data:
+
+networks:
+  microservices-network:
+    driver: bridge
+

@@ -6,4 +6,5 @@ public interface IPedidoRepository
 {
     Task AdicionarAsync(PedidoEntity pedido);
     Task<PedidoEntity?> ObterPorIdAsync(Guid id);
+    Task<IEnumerable<PedidoEntity>> ObterTodosAsync();
 }

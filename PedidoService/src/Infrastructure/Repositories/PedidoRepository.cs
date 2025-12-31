@@ -22,6 +22,16 @@ public class PedidoRepository : IPedidoRepository
 
     public async Task<PedidoEntity?> ObterPorIdAsync(Guid id)
     {
-        return await _context.Pedidos.FirstOrDefaultAsync(p => p.Id == id);
+        return await _context.Pedidos
+            .Include(p => p.Itens)
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
+    public async Task<IEnumerable<PedidoEntity>> ObterTodosAsync()
+    {
+        return await _context.Pedidos
+            .Include(p => p.Itens)
+            .OrderByDescending(p => p.DataPedido)
+            .ToListAsync();
     }
 }

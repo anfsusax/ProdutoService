@@ -12,13 +12,16 @@ public class PedidoModel
 
     protected PedidoModel() { }
 
-    public PedidoModel(decimal valorTotal)
+    public PedidoModel(IEnumerable<PedidoItem> itens)
     {
-        if (valorTotal <= 0) throw new DomainException("Valor total deve ser maior que zero.");
-        
+        if (itens is null || !itens.Any())
+            throw new DomainException("Pedido deve conter pelo menos um item.");
+
         Id = Guid.NewGuid();
-        ValorTotal = valorTotal;
         DataPedido = DateTime.UtcNow;
         Status = "Criado";
+
+        Itens = itens.ToList();
+        ValorTotal = Itens.Sum(i => i.Quantidade * i.PrecoUnitario);
     }
 }
