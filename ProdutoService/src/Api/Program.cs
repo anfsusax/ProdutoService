@@ -27,7 +27,13 @@ builder.Services.AddEndpointsApiExplorer();
  
 var app = builder.Build();
 
-app.UseHttpsRedirection();
+// Apenas redirecionar HTTPS se a URL contiver https
+var urls = builder.Configuration["ASPNETCORE_URLS"] ?? "";
+if (urls.Contains("https"))
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseAuthorization();
 app.MapControllers();
 
