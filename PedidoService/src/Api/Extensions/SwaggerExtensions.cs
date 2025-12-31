@@ -13,7 +13,9 @@ public static class SwaggerExtensions
             {
                 Title = "Pedido API",
                 Version = "v1.0",
-                Description = "API para gerenciamento de pedidos."
+                Description = "API para gerenciamento de pedidos. " +
+                              "Um pedido pode conter múltiplos produtos. " +
+                              "Produtos duplicados (mesmo ProdutoId) são automaticamente agrupados somando as quantidades."
             });
         });
 

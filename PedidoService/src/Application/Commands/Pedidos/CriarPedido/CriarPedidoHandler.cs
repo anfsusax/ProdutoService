@@ -16,30 +16,54 @@ public class CriarPedidoHandler
     }
 
     public async Task<Guid> Handle(CriarPedidoCommand command, CancellationToken cancellationToken = default)
-    {
-        var itens = new List<PedidoItem>();
+    { 
+        var itensAgrupados = command.Itens
+            .GroupBy(i => i.ProdutoId)
+            .Select(g => new CriarPedidoItemDto(g.Key, g.Sum(i => i.Quantidade)))
+            .ToList();
+         
+        var validacoes = await Task.WhenAll(
+            itensAgrupados.Select(async item =>
+            {
+                var produto = await _produtoCatalogClient.ObterPorIdAsync(item.ProdutoId, cancellationToken);
+                return new { Item = item, Produto = produto };
+            })
+        );
+         
+        var erros = new List<string>();
+        var itensValidos = new List<PedidoItem>();
 
-        foreach (var item in command.Itens)
+        foreach (var validacao in validacoes)
         {
-            var produto = await _produtoCatalogClient.ObterPorIdAsync(item.ProdutoId, cancellationToken);
-
-            if (produto is null)
+            if (validacao.Produto is null)
             {
-                throw new InvalidOperationException($"Produto {item.ProdutoId} não encontrado no catálogo.");
+                erros.Add($"Produto {validacao.Item.ProdutoId} não encontrado no catálogo.");
+                continue;
             }
 
-            if (!produto.Ativo)
+            if (!validacao.Produto.Ativo)
             {
-                throw new InvalidOperationException($"Produto {item.ProdutoId} está inativo e não pode ser adicionado ao pedido.");
+                erros.Add($"Produto {validacao.Item.ProdutoId} ({validacao.Produto.Nome}) está inativo e não pode ser adicionado ao pedido.");
+                continue;
             }
 
-            var pedidoItem = new PedidoItem(produto.Id, produto.Nome, item.Quantidade, produto.Preco);
-            itens.Add(pedidoItem);
+            var pedidoItem = new PedidoItem(
+                validacao.Produto.Id,
+                validacao.Produto.Nome,
+                validacao.Item.Quantidade,
+                validacao.Produto.Preco);
+            
+            itensValidos.Add(pedidoItem);
         }
-
-        var pedido = new PedidoEntity(itens);
-        
-        // Associar os itens ao pedido
+         
+        if (erros.Any())
+        {
+            throw new InvalidOperationException(
+                $"Erros ao validar produtos do pedido:\n{string.Join("\n", erros)}");
+        }
+         
+        var pedido = new PedidoEntity(itensValidos);
+         
         foreach (var item in pedido.Itens)
         {
             item.AssociarPedido(pedido.Id);
