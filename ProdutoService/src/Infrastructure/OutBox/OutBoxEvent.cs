@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Infrastructure.Outbox;
 
 public class OutboxEvent
@@ -8,14 +10,18 @@ public class OutboxEvent
     public DateTime OccurredAt { get; private set; }
     public DateTime? ProcessedAt { get; private set; }
 
-    private OutboxEvent() { } // EF Core
-
-    public OutboxEvent(string type, string payload)
+    public string Status { get; set; }
+    private OutboxEvent() { }
+    public static OutboxEvent From(object domainEvent)
     {
-        Id = Guid.NewGuid();
-        Type = type;
-        Payload = payload;
-        OccurredAt = DateTime.UtcNow;
+        return new OutboxEvent
+        {
+            Id = Guid.NewGuid(),
+            Type = domainEvent.GetType().Name,
+            Payload = JsonSerializer.Serialize(domainEvent),
+            OccurredAt = DateTime.UtcNow,
+            Status = "Pending",
+        };
     }
 
     public void MarkAsProcessed()

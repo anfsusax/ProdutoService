@@ -7,13 +7,13 @@ namespace Application.Commands.Produtos.CriarProduto;
 public class CriarProdutoHandler
 {
     private readonly IProdutoRepository _repository;
-    private readonly IEventPublisher _eventPublisher;
+    private readonly IOutboxWriter _outboxWriter;
     private readonly ILogger<CriarProdutoHandler> _logger;
 
-    public CriarProdutoHandler(IProdutoRepository repository, IEventPublisher eventPublisher, ILogger<CriarProdutoHandler> logger)
+    public CriarProdutoHandler(IProdutoRepository repository, IOutboxWriter outboxWriter, ILogger<CriarProdutoHandler> logger)
     {
         _repository = repository;
-        _eventPublisher = eventPublisher;
+        _outboxWriter = outboxWriter;
         _logger = logger;
     }
 
@@ -28,10 +28,10 @@ public class CriarProdutoHandler
         );
 
         await _repository.AdicionarAsync(produto);
-
+        
         foreach (var domainEvent in produto.DomainEvents)
         {
-            await _eventPublisher.PublishAsync(domainEvent);
+            await _outboxWriter.AddAsync(domainEvent);
         }
          
         produto.ClearDomainEvents();

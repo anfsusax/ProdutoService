@@ -1,8 +1,10 @@
 ﻿ using Api.Contracts.Produto;
+using Application.Commands.Desativar;
 using Application.Commands.Produtos.Atualizar;
 using Application.Commands.Produtos.AtualizarDados;
 using Application.Commands.Produtos.AtualizarPreco;
 using Application.Commands.Produtos.CriarProduto;
+using Application.Commands.Produtos.Reativar;
 using Application.Queries.Produtos.ObterPorId;
 using Application.Queries.Produtos.ObterTodos;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +21,8 @@ public class ProdutosController : ControllerBase
     private readonly AtualizarProdutoHandler _atualizarHandler;
     private readonly AtualizarPrecoHandler _atualizarPrecoHandler;
     private readonly AtualizarDadosProdutoHandler _atualizarDadosHandler;
+    private readonly DesativarProdutoHandler _desativarHandler;
+    private readonly ReativarProdutoHandler _reativarHandler;
 
     public ProdutosController(
         CriarProdutoHandler criarHandler,
@@ -26,7 +30,9 @@ public class ProdutosController : ControllerBase
         ObterTodosProdutosQueryHandler obterTodosHandler,
         AtualizarProdutoHandler atualizarHandler,
         AtualizarPrecoHandler atualizarPrecoHandler,
-        AtualizarDadosProdutoHandler atualizarDadosHandler)
+        AtualizarDadosProdutoHandler atualizarDadosHandler,
+        DesativarProdutoHandler desativarHandler,
+        ReativarProdutoHandler reativarHandler)
     {
         _criarHandler = criarHandler;
         _obterPorIdHandler = obterPorIdHandler;
@@ -34,6 +40,8 @@ public class ProdutosController : ControllerBase
         _atualizarHandler = atualizarHandler;
         _atualizarPrecoHandler = atualizarPrecoHandler;
         _atualizarDadosHandler = atualizarDadosHandler;
+        _desativarHandler = desativarHandler;
+        _reativarHandler = reativarHandler;
     }
 
     [HttpPost]
@@ -63,7 +71,10 @@ public class ProdutosController : ControllerBase
             Id = produto.Id,
             Nome = produto.Nome,
             Descricao = produto.Descricao,
-            Preco = produto.Preco
+            Preco = produto.Preco,
+            Ativo = produto.Ativo,
+            DesativadoEm = produto.DesativadoEm,
+            ReativadoEm = produto.ReativadoEm
         });
     }
 
@@ -72,7 +83,18 @@ public class ProdutosController : ControllerBase
     {
         var produtos = await _obterTodosHandler.HandleAsync();
 
-        return Ok(produtos);
+        var response = produtos.Select(p => new ProdutoResponse
+        {
+            Id = p.Id,
+            Nome = p.Nome,
+            Descricao = p.Descricao,
+            Preco = p.Preco,
+            Ativo = p.Ativo,
+            DesativadoEm = p.DesativadoEm,
+            ReativadoEm = p.ReativadoEm
+        });
+
+        return Ok(response);
     }
 
     [HttpPut("{id:guid}")]
@@ -115,6 +137,20 @@ public class ProdutosController : ControllerBase
 
         await _atualizarDadosHandler.HandleAsync(command);
 
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/desativar")]
+    public async Task<IActionResult> Desativar(Guid id)
+    { 
+        await _desativarHandler.HandleAsync(new DesativarProdutoCommand(id));
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/reativar")]
+    public async Task<IActionResult> Reativar(Guid id)
+    {
+        await _reativarHandler.HandleAsync(new ReativarProdutoCommand(id));
         return NoContent();
     }
 }

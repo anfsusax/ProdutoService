@@ -10,6 +10,8 @@ public class Produto
     public string Descricao { get; private set; }
     public decimal Preco { get; private set; }
     public bool Ativo { get; private set; }
+    public DateTime DesativadoEm { get; private set; }
+    public DateTime? ReativadoEm { get; private set; }
 
     private readonly List<object> _domainEvents = new();
     public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
@@ -40,10 +42,24 @@ public class Produto
 
     public void Desativar()
     {
-        Ativo = false;
-        AddDomainEvent(new ProdutoDesativadoEvent(Id, DateTime.UtcNow));
-    }
+        if (!Ativo)
+            throw new DomainException("Produto já está desativado.");
 
+        Ativo = false;
+        DesativadoEm = DateTime.UtcNow;
+        ReativadoEm = null;
+        AddDomainEvent(new ProdutoDesativadoEvent(Id, DesativadoEm));
+    }
+    public void Reativar()
+    {
+        if (Ativo)
+            throw new DomainException("Produto já está ativo.");
+
+        Ativo = true;
+        DesativadoEm = default;
+        ReativadoEm = DateTime.UtcNow;
+        AddDomainEvent(new ProdutoReativadoEvent(Id, ReativadoEm.Value));
+    }
 
     public void AtualizarPreco(decimal novoPreco)
     {
